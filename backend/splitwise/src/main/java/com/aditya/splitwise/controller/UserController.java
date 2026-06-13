@@ -1,5 +1,6 @@
 package com.aditya.splitwise.controller;
 
+import com.aditya.splitwise.dto.ApiResponse;
 import com.aditya.splitwise.dto.CreateUserRequest;
 import com.aditya.splitwise.dto.UserResponse;
 import com.aditya.splitwise.service.UserService;
@@ -17,22 +18,34 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public UserResponse createUser(
+    public ApiResponse<UserResponse> createUser(
             @Valid @RequestBody CreateUserRequest request) {
 
-        return userService.createUser(request);
+        return ApiResponse.<UserResponse>builder()
+                .success(true)
+                .message("User created successfully")
+                .data(userService.createUser(request))
+                .build();
     }
 
     @GetMapping("/{id}")
-    public UserResponse getUser(
+    public ApiResponse<UserResponse> getUser(
             @PathVariable Long id) {
 
-        return userService.getUser(id);
+        return ApiResponse.<UserResponse>builder()
+                .success(true)
+                .message("User fetched successfully")
+                .data(userService.getUser(id))
+                .build();
     }
 
     @GetMapping
-    public List<UserResponse> getAllUsers() {
+    public ApiResponse<List<UserResponse>> getAllUsers() {
 
-        return userService.getAllUsers();
+        return ApiResponse.<List<UserResponse>>builder()
+                .success(true)
+                .message("Users fetched successfully")
+                .data(userService.getAllUsers())
+                .build();
     }
 }
