@@ -35,4 +35,19 @@ public class GlobalExceptionHandler {
                                 .build()
                 );
     }
+
+    @ExceptionHandler(GroupNotFoundException.class)
+        public ResponseEntity<ApiResponse<Object>>
+        handleGroupNotFound(
+                GroupNotFoundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ApiResponse.builder()
+                                .success(false)
+                                .message(ex.getMessage())
+                                .data(null)
+                                .build()
+                );
+        }
 }
