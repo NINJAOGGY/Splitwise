@@ -50,4 +50,19 @@ public class GlobalExceptionHandler {
                                 .build()
                 );
         }
+
+        @ExceptionHandler(InvalidExpenseException.class)
+        public ResponseEntity<ApiResponse<Object>>
+        handleInvalidExpense(
+                InvalidExpenseException ex) {
+
+        return ResponseEntity.badRequest()
+                .body(
+                        ApiResponse.builder()
+                                .success(false)
+                                .message(ex.getMessage())
+                                .data(null)
+                                .build()
+                );
+        }
 }
