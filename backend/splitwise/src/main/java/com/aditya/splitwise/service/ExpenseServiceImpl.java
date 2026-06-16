@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
 
 @Service
@@ -43,6 +45,17 @@ public class ExpenseServiceImpl
                 .orElseThrow(() ->
                         new UserNotFoundException(
                                 "User not found"));
+        
+
+        if (!group.getMembers().contains(paidBy)) {
+                throw new InvalidExpenseException(
+                        "PaidBy user is not a member of the group");
+                }
+
+        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new InvalidExpenseException(
+                        "Amount must be greater than zero");
+                }
 
         int participantCount =
                 request.getParticipantIds().size();
@@ -72,6 +85,17 @@ public class ExpenseServiceImpl
         Map<Long, BigDecimal> shareMap =
                 new HashMap<>();
 
+        Set<Long> uniqueParticipants =
+                new HashSet<>(
+                        request.getParticipantIds());
+
+        if (uniqueParticipants.size()
+                != request.getParticipantIds().size()) {
+
+        throw new InvalidExpenseException(
+                "Duplicate participants are not allowed");
+        }
+
         for (Long userId :
                 request.getParticipantIds()) {
 
@@ -81,6 +105,11 @@ public class ExpenseServiceImpl
                                     new UserNotFoundException(
                                             "User not found"));
 
+                if (!group.getMembers().contains(user)) {
+                        throw new InvalidExpenseException(
+                                "Participant is not a member of the group");
+                        }
+                        
             ExpenseParticipant participant =
                     ExpenseParticipant.builder()
                             .expense(expense)
