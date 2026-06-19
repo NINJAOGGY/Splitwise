@@ -29,4 +29,21 @@ public class ExpenseController {
                                 request))
                 .build();
     }
+
+    @GetMapping("/groups/{groupId}/balances")
+        public ApiResponse<BalanceResponse>
+        getBalances(
+                @PathVariable Long groupId) {
+
+        return ApiResponse
+                .<BalanceResponse>builder()
+                .success(true)
+                .message(
+                        "Balances fetched successfully")
+                .data(
+                        expenseService
+                                .getGroupBalances(
+                                        groupId))
+                .build();
+        }
 }

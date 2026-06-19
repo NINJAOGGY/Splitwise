@@ -1,5 +1,6 @@
 package com.aditya.splitwise.service;
 
+import com.aditya.splitwise.dto.BalanceResponse;
 import com.aditya.splitwise.dto.CreateExpenseRequest;
 import com.aditya.splitwise.dto.ExpenseResponse;
 import com.aditya.splitwise.entity.*;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -134,4 +136,43 @@ public class ExpenseServiceImpl
                 .shares(shareMap)
                 .build();
     }
+
+    @Override
+        @Transactional(readOnly = true)
+        public BalanceResponse getGroupBalances(Long groupId) {
+        groupRepository.findById(groupId)
+                .orElseThrow(() ->
+                        new GroupNotFoundException(
+                                "Group not found"));
+
+        List<Expense> expenses =
+                expenseRepository.findByGroupId(
+                        groupId);
+
+        Map<Long, BigDecimal> balances = new HashMap<>();
+
+        for (Expense expense : expenses) {
+                Long payerId = expense.getPaidBy().getId();
+                BigDecimal amount = expense.getAmount();
+
+                balances.put(payerId,
+                        balances.getOrDefault(payerId, BigDecimal.ZERO).add(amount));
+        }
+
+        for (Expense expense : expenses) {
+                for (ExpenseParticipant participant : expense.getParticipants()) {
+                Long userId = participant.getUser().getId();
+
+                balances.put(userId,
+                        balances.getOrDefault(userId, BigDecimal.ZERO).subtract(
+                                participant.getShare()
+                                )
+                        );
+                }
+        }
+
+        return BalanceResponse.builder()
+                .balances(balances)
+                .build();
+        }
 }
