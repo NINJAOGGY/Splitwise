@@ -3,6 +3,7 @@ package com.aditya.splitwise.service;
 import com.aditya.splitwise.dto.BalanceResponse;
 import com.aditya.splitwise.dto.CreateExpenseRequest;
 import com.aditya.splitwise.dto.ExpenseResponse;
+import com.aditya.splitwise.dto.SettlementResponse;
 import com.aditya.splitwise.entity.*;
 import com.aditya.splitwise.exception.GroupNotFoundException;
 import com.aditya.splitwise.exception.InvalidExpenseException;
@@ -10,6 +11,7 @@ import com.aditya.splitwise.exception.UserNotFoundException;
 import com.aditya.splitwise.repository.ExpenseRepository;
 import com.aditya.splitwise.repository.GroupRepository;
 import com.aditya.splitwise.repository.UserRepository;
+import com.aditya.splitwise.dto.UserBalance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -137,7 +140,7 @@ public class ExpenseServiceImpl
                 .build();
     }
 
-    @Override
+        @Override
         @Transactional(readOnly = true)
         public BalanceResponse getGroupBalances(Long groupId) {
         groupRepository.findById(groupId)
@@ -175,4 +178,90 @@ public class ExpenseServiceImpl
                 .balances(balances)
                 .build();
         }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<SettlementResponse> simplifyDebts(
+                Long groupId) {
+                        BalanceResponse balanceResponse =
+                                getGroupBalances(groupId);
+
+                        Map<Long, BigDecimal> balances =
+                                balanceResponse.getBalances();
+
+                        List<UserBalance> creditors =
+                                new ArrayList<>();
+
+                        List<UserBalance> debtors =
+                                new ArrayList<>();
+
+                        for (Map.Entry<Long, BigDecimal> entry
+                                        : balances.entrySet()) {
+
+                                BigDecimal amount = entry.getValue();
+
+                                if (amount.compareTo(BigDecimal.ZERO) > 0) {
+
+                                        creditors.add(
+                                                new UserBalance(
+                                                        entry.getKey(),
+                                                        amount));
+
+                                } else if (
+                                        amount.compareTo(BigDecimal.ZERO) < 0) {
+
+                                        debtors.add(
+                                                new UserBalance(
+                                                        entry.getKey(),
+                                                        amount.abs()));
+                                }
+                        }
+                        int i=0,j=0;
+                        List<SettlementResponse> result =
+                                new ArrayList<>();
+
+                        while (i < debtors.size()
+                                && j < creditors.size()) {
+
+                        UserBalance debtor = debtors.get(i);
+
+                        UserBalance creditor = creditors.get(j);
+
+                        BigDecimal settlementAmount =
+                                debtor.getAmount()
+                                        .min(creditor.getAmount());
+
+                        result.add(SettlementResponse.builder()
+                                        .fromUserId(
+                                                debtor.getUserId())
+                                        .toUserId(
+                                                creditor.getUserId())
+                                        .amount(
+                                                settlementAmount)
+                                        .build());
+                        
+                        debtor.setAmount( debtor.getAmount()
+                                        .subtract(
+                                                settlementAmount));
+
+                        creditor.setAmount(creditor.getAmount()
+                                        .subtract(
+                                                settlementAmount));
+                        
+                        if (debtor.getAmount()
+                                .compareTo(BigDecimal.ZERO)
+                                == 0) {
+
+                        i++;
+                        }
+
+                        if (creditor.getAmount()
+                                .compareTo(BigDecimal.ZERO)
+                                == 0) {
+
+                        j++;
+                        }
+                        }
+                        return result;
+                }
 }

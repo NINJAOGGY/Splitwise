@@ -1,6 +1,7 @@
 package com.aditya.splitwise.controller;
 
 import com.aditya.splitwise.dto.*;
+import java.util.List;
 import com.aditya.splitwise.service.ExpenseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class ExpenseController {
                 .build();
     }
 
-    @GetMapping("/groups/{groupId}/balances")
+        @GetMapping("/groups/{groupId}/balances")
         public ApiResponse<BalanceResponse>
         getBalances(
                 @PathVariable Long groupId) {
@@ -43,6 +44,23 @@ public class ExpenseController {
                 .data(
                         expenseService
                                 .getGroupBalances(
+                                        groupId))
+                .build();
+        }
+
+        @GetMapping("/groups/{groupId}/settlements")
+        public ApiResponse<List<SettlementResponse>>
+        getSettlements(
+                @PathVariable Long groupId) {
+
+        return ApiResponse
+                .<List<SettlementResponse>>builder()
+                .success(true)
+                .message(
+                        "Settlements fetched successfully")
+                .data(
+                        expenseService
+                                .simplifyDebts(
                                         groupId))
                 .build();
         }
