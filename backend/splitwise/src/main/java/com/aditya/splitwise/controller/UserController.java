@@ -17,6 +17,9 @@ public class UserController {
 
     private final UserService userService;
 
+    // User is being created here and the response is being sent back to the client.
+    // The response is being sent in the form of ApiResponse object which contains success, message and data.
+    // The data is being sent back in the form of UserResponse object which contains id, name and email.
     @PostMapping
     public ApiResponse<UserResponse> createUser(
             @Valid @RequestBody CreateUserRequest request) {

@@ -36,8 +36,7 @@ public class ExpenseServiceImpl
 
     @Override
     @Transactional
-    public ExpenseResponse createExpense(
-            CreateExpenseRequest request) {
+    public ExpenseResponse createExpense(CreateExpenseRequest request) {
 
         Group group = groupRepository.findById(
                         request.getGroupId())
@@ -72,40 +71,34 @@ public class ExpenseServiceImpl
 
         BigDecimal share =
                 request.getAmount()
-                        .divide(
-                                BigDecimal.valueOf(
-                                        participantCount),
+                        .divide(BigDecimal.valueOf(participantCount),
                                 2,
                                 RoundingMode.HALF_UP);
 
         Expense expense = Expense.builder()
-                .description(
-                        request.getDescription())
-                .amount(
-                        request.getAmount())
+                .description(request.getDescription())
+                .amount(request.getAmount())
                 .group(group)
                 .paidBy(paidBy)
                 .build();
 
-        Map<Long, BigDecimal> shareMap =
-                new HashMap<>();
+        // Map to hold userId and their corresponding share
+        Map<Long, BigDecimal> shareMap = new HashMap<>();
 
+        // Check for duplicate participants
         Set<Long> uniqueParticipants =
-                new HashSet<>(
-                        request.getParticipantIds());
+                new HashSet<>(request.getParticipantIds());
 
-        if (uniqueParticipants.size()
-                != request.getParticipantIds().size()) {
-
-        throw new InvalidExpenseException(
-                "Duplicate participants are not allowed");
+        if (uniqueParticipants.size()!= request.getParticipantIds().size()) {
+                throw new InvalidExpenseException(
+                        "Duplicate participants are not allowed");
         }
 
-        for (Long userId :
-                request.getParticipantIds()) {
+        // Validate that all participants are members of the group 
+        // and create ExpenseParticipant entities with the calculated share
+        for (Long userId : request.getParticipantIds()) {
 
-            User user =
-                    userRepository.findById(userId)
+            User user = userRepository.findById(userId)
                             .orElseThrow(() ->
                                     new UserNotFoundException(
                                             "User not found"));
@@ -143,40 +136,40 @@ public class ExpenseServiceImpl
         @Override
         @Transactional(readOnly = true)
         public BalanceResponse getGroupBalances(Long groupId) {
-        groupRepository.findById(groupId)
-                .orElseThrow(() ->
-                        new GroupNotFoundException(
-                                "Group not found"));
+                groupRepository.findById(groupId)
+                        .orElseThrow(() ->
+                                new GroupNotFoundException(
+                                        "Group not found"));
 
-        List<Expense> expenses =
-                expenseRepository.findByGroupId(
-                        groupId);
+                List<Expense> expenses =
+                        expenseRepository.findByGroupId(
+                                groupId);
 
-        Map<Long, BigDecimal> balances = new HashMap<>();
+                Map<Long, BigDecimal> balances = new HashMap<>();
 
-        for (Expense expense : expenses) {
-                Long payerId = expense.getPaidBy().getId();
-                BigDecimal amount = expense.getAmount();
+                for (Expense expense : expenses) {
+                        Long payerId = expense.getPaidBy().getId();
+                        BigDecimal amount = expense.getAmount();
 
-                balances.put(payerId,
-                        balances.getOrDefault(payerId, BigDecimal.ZERO).add(amount));
-        }
-
-        for (Expense expense : expenses) {
-                for (ExpenseParticipant participant : expense.getParticipants()) {
-                Long userId = participant.getUser().getId();
-
-                balances.put(userId,
-                        balances.getOrDefault(userId, BigDecimal.ZERO).subtract(
-                                participant.getShare()
-                                )
-                        );
+                        balances.put(payerId,
+                                balances.getOrDefault(payerId, BigDecimal.ZERO).add(amount));
                 }
-        }
 
-        return BalanceResponse.builder()
-                .balances(balances)
-                .build();
+                for (Expense expense : expenses) {
+                        for (ExpenseParticipant participant : expense.getParticipants()) {
+                        Long userId = participant.getUser().getId();
+
+                        balances.put(userId,
+                                balances.getOrDefault(userId, BigDecimal.ZERO).subtract(
+                                        participant.getShare()
+                                        )
+                                );
+                        }
+                }
+
+                return BalanceResponse.builder()
+                        .balances(balances)
+                        .build();
         }
 
         @Override

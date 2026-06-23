@@ -15,6 +15,7 @@ public class GroupController {
 
     private final GroupService groupService;
 
+    // Creation of a new Group
     @PostMapping
     public ApiResponse<GroupResponse> createGroup(
             @Valid
@@ -24,9 +25,7 @@ public class GroupController {
         return ApiResponse.<GroupResponse>builder()
                 .success(true)
                 .message("Group created successfully")
-                .data(
-                        groupService.createGroup(
-                                request))
+                .data(groupService.createGroup(request))
                 .build();
     }
 
@@ -37,12 +36,11 @@ public class GroupController {
         return ApiResponse.<GroupResponse>builder()
                 .success(true)
                 .message("Group fetched successfully")
-                .data(
-                        groupService.getGroup(
-                                groupId))
+                .data(groupService.getGroup(groupId))
                 .build();
     }
 
+    // Adding a member to a group
     @PostMapping("/{groupId}/members/{userId}")
     public ApiResponse<GroupResponse> addMember(
             @PathVariable Long groupId,
@@ -51,10 +49,7 @@ public class GroupController {
         return ApiResponse.<GroupResponse>builder()
                 .success(true)
                 .message("Member added successfully")
-                .data(
-                        groupService.addMember(
-                                groupId,
-                                userId))
+                .data(groupService.addMember(groupId,userId))
                 .build();
     }
 }

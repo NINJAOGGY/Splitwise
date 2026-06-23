@@ -17,6 +17,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    // New user is being created here and saved to the Db.
     @Override
     public UserResponse createUser(CreateUserRequest request) {
 

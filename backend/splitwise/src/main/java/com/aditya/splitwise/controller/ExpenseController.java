@@ -15,8 +15,7 @@ public class ExpenseController {
     private final ExpenseService expenseService;
 
     @PostMapping
-    public ApiResponse<ExpenseResponse>
-    createExpense(
+    public ApiResponse<ExpenseResponse> createExpense(
             @Valid
             @RequestBody
             CreateExpenseRequest request) {
@@ -32,8 +31,7 @@ public class ExpenseController {
     }
 
         @GetMapping("/groups/{groupId}/balances")
-        public ApiResponse<BalanceResponse>
-        getBalances(
+        public ApiResponse<BalanceResponse> getBalances(
                 @PathVariable Long groupId) {
 
         return ApiResponse
@@ -49,8 +47,7 @@ public class ExpenseController {
         }
 
         @GetMapping("/groups/{groupId}/settlements")
-        public ApiResponse<List<SettlementResponse>>
-        getSettlements(
+        public ApiResponse<List<SettlementResponse>> getSettlements(
                 @PathVariable Long groupId) {
 
         return ApiResponse
